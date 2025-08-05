@@ -83,7 +83,7 @@ jobs:
       - name: Update image tag in ArgoCD Application manifest
         run: |
           # 1) 태그 생성
-          NEW_TAG=${GITHUB_SHA:0:7}
+          NEW_TAG=${GITHUB_SHA}
           echo "Updating image tag to: $NEW_TAG"
 
           # 2) 매니페스트 존재 확인
