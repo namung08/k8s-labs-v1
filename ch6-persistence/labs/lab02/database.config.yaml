@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ddoddo-config-database
+data:
+  POSTGRES_USER: root
+  POSTGRES_DB: ddoddo_market_db

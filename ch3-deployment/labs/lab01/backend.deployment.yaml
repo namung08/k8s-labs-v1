@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-backend-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: todo-backend
+  template:
+    metadata:
+      labels:
+        app: todo-backend
+    spec:
+      containers:
+        - name: todo-backend
+          image: namung08/k8s-labs-todo-backend:v1.0
+          ports:
+            - containerPort: 5000
+          env:
+            - name: PGHOST
+              value: todo-db-deployment
+            - name: PGUSER
+              value: user
+            - name: PGPASSWORD
+              value: user1234
+            - name: PGDATABASE
+              value: userdb
+            - name: PGPORT
+              value: "5432"

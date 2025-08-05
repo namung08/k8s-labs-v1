@@ -26,7 +26,7 @@ kubectl apply -f frontend-deployment.yaml
 frontend-service-loadbalancer.yaml 파일을 apply합니다.
 
 ```Bash
-kubectl apply -f frontend-service-loadbalancer.yaml
+kubectl apply -f frontend-service-loadbalancer.yaml.yaml
 ```
 
 ### 3. Service 확인 및 외부 접속
@@ -52,5 +52,5 @@ LoadBalancer 타입은 NodePort의 모든 기능을 포함하며, 추가적으�
 ### 4. 리소스 정리
 ```Bash
 kubectl delete -f frontend-deployment.yaml
-kubectl delete -f frontend-service-loadbalancer.yaml
+kubectl delete -f frontend-service-loadbalancer.yaml.yaml
 ```

@@ -1,0 +1,33 @@
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: backend-pod
+  labels:
+    app: backend
+spec:
+  containers:
+    - name: backend
+      image: namung08/ddoddo-backend:latest # Docker Hub 사용자 이름으로 변경 필요
+      ports:
+        - containerPort: 8080
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: prod
+        - name: DB_URL
+          value: jdbc:postgresql://10.244.0.24:5432/ddoddo_market_db
+        - name: DB_USERNAME
+          value: root
+        - name: DB_PASSWORD
+          value: pass1234
+        - name: DDL_AUTO
+          value: update
+        - name: SHOW_SQL
+          value: "false"
+        - name: JWT_SET_URI
+        - name: JWT_SECRET_KEY
+        - name: CLOUDFLARE_ACCESS_KEY_ID
+        - name: CLOUDFLARE_SECRET_ACCESS_KEY
+        - name: CLOUDFLARE_R2_BUCKET_NAME
+        - name: CLOUDFLARE_ACCOUNT_ID
+        - name: CLOUDFLARE_R2_PUBLIC_URL

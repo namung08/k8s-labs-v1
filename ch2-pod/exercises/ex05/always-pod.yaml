@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: never-pod
+spec:
+  containers:
+    - name: success-container
+      image: busybox:latest
+      command: ["/bin/sh", "-c", "echo 'Job Done!'; sleep 5;"]
+  restartPolicy: Always

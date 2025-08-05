@@ -1,0 +1,18 @@
+backend:
+  replicaCount: 2
+  image:
+    repository: captainyun/k8s-labs-todo-backend
+    tag: v1.0
+  service:
+    type: NodePort
+    port: 8080
+    targetPort: 8080
+    nodePort:
+      port: 30001
+      enabled: true
+  cors: http://localhost:3000
+database:
+  name: tododb
+  user: todouser
+  password: "todo1234"
+  rootPassword: "root1234"

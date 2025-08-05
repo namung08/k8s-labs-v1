@@ -15,7 +15,7 @@ spec:
       containers:
         - name: backend
           # ❗️ 이전 실습에서 사용한 본인의 Docker Hub 이미지로 변경해주세요.
-          image: captainyun/k8s-labs-todo-backend:v1.0
+          image: namung08/k8s-labs-todo-backend:v1.0
           ports:
             - containerPort: 8080
           env:

@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ddoddo-database-statefulset
+spec:
+  serviceName: "ddoddo-service-database"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ddoddo-database
+  template:
+    metadata:
+      labels:
+        app: ddoddo-database
+    spec:
+      containers:
+        - name: postgresql
+          image: postgres:15
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - configMapRef:
+                name: ddoddo-config-database
+            - secretRef:
+                name: ddoddo-secret-database
+          volumeMounts:
+            - mountPath: /data/ddoddo
+              name: ddoddo-data
+  volumeClaimTemplates:
+    - metadata:
+        name: ddoddo-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: "standard"
+        resources:
+          requests:
+            storage: 1Gi

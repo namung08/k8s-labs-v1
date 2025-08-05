@@ -59,8 +59,8 @@ jobs:
           context: ./apps/todo-list/backend
           file: ./apps/todo-list/backend/Dockerfile.prod
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/k8s-labs-todo-backend:${{ github.sha }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/todo-list-backend:${{ github.sha }}
 
       # 8. 생성된 이미지 태그 출력
       - name: Print image tag
-        run: echo "Image tagged with:${{ secrets.DOCKERHUB_USERNAME }}/k8s-labs-todo-backend:${{ github.sha }}"
+        run: echo "Image tagged with:${{ secrets.DOCKERHUB_USERNAME }}/todo-list-backend:${{ github.sha }}"

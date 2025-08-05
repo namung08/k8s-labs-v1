@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ddoddo-config-backend
+data:
+  SPRING_PROFILES_ACTIVE: prod
+  DB_USERNAME: root
+  DDL_AUTO: update
+  SHOW_SQL: "false"

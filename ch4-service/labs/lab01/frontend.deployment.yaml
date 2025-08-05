@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-frontend-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: todo-frontend
+  template:
+    metadata:
+      labels:
+        app: todo-frontend
+    spec:
+      containers:
+        - name: todo-frontend
+          image: namung08/k8s-labs-todo-frontend:v1.0
+          ports:
+            - containerPort: 3000
+          env:
+            - name: VITE_API_URL
+              value: http://todo-backend-service:8080

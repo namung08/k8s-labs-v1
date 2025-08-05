@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{include "todo-list-chart.fullname" .}}-db-statefulset
+  labels:
+    {{- include "todo-list-chart.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      name: {{- include "todo-list-chart.database.selectorLabels" . | nindent 6 }}
+  serviceName: {{ include "todo-list-chart.fullname" . }}-db-service
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        {{- include "todo-list-chart.backend.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        ports:
+        - containerPort: 3306
+        envFrom:
+          - configMapRef:
+              name: {{ include "todo-list-chart.fullname" . }}-db-config
+          - secretRef:
+              name: {{ include "todo-list-chart.fullname" . }}-db-secret
+        volumeMounts:
+        - name: todo-persistent-storage
+          mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+  - metadata:
+      name: todo-persistent-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ddoddo-db-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ddoddo-db
+  template:
+    metadata:
+      labels:
+        app: ddoddo-db
+    spec:
+      containers:
+        - name: postgresql
+          image: postgres:15
+          ports:
+            - containerPort: 5432
+          env:
+            - name: NEXT_PUBLIC_API_BASE_URL
+              value: http://dummy:8080

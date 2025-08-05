@@ -8,6 +8,6 @@ metadata:
 spec:
   containers:
     - name: frontend
-      image: captainyun/k8s-labs-todo-frontend:latest # Docker Hub 사용자 이름으로 변경 필요
+      image: namung08/k8s-labs-todo-frontend:latest # Docker Hub 사용자 이름으로 변경 필요
       ports:
         - containerPort: 3000

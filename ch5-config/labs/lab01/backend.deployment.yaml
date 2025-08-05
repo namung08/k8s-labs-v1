@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: todo-backend
+  template:
+    metadata:
+      labels:
+        app: todo-backend
+    spec:
+      containers:
+        - name: todo-backend
+          image: namung08/k8s-labs-todo-backend:v1.0
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: todo-backend-config
+            - configMapRef:
+                name: mysql-todo-db-config
+            - secretRef:
+                name: mysql-todo-db-secret

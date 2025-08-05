@@ -32,6 +32,7 @@ dependencies {
     implementation "io.awspring.cloud:spring-cloud-aws-starter-s3"
     // 웹소켓, STOMP 사용을 위한 의존성 추가
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'org.postgresql:postgresql'
     annotationProcessor 'org.projectlombok:lombok'

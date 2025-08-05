@@ -19,9 +19,9 @@ spec:
           image: mysql:8.0
           ports:
             - containerPort: 3306
-          envFrom:
+          envFrom: # 환경 변수를 모두 가져오는 부분
             - configMapRef:
-                name: todo-db-config
+                name: todo-db-config # 어디에서 가지고 올지?
           env:
             - name: MYSQL_PASSWORD
               value: "todo1234"

@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ddoddo-backend-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ddoddo-backend
+  template:
+    metadata:
+      labels:
+        app: ddoddo-backend
+    spec:
+      containers:
+        - name: ddoddo-backend
+          image: namung08/ddoddo-backend:v1
+          ports:
+            - containerPort: 8080
+          env:
+          - name: SPRING_PROFILES_ACTIVE
+            value: prod
+          - name: DB_URL
+            value: jdbc:postgresql://10.244.0.24:5432/ddoddo_market_db
+          - name: DB_USERNAME
+            value: root
+          - name: DB_PASSWORD
+            value: pass1234
+          - name: DDL_AUTO
+            value: update
+          - name: SHOW_SQL
+            value: "false"
+          - name: JWT_SET_URI
+            value: https://www.googleapis.com/oauth2/v3/certs
+          - name: JWT_SECRET_KEY
+          - name: CLOUDFLARE_ACCESS_KEY_ID
+          - name: CLOUDFLARE_SECRET_ACCESS_KEY
+          - name: CLOUDFLARE_R2_BUCKET_NAME
+          - name: CLOUDFLARE_ACCOUNT_ID
+          - name: CLOUDFLARE_R2_PUBLIC_URL
