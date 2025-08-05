@@ -1,0 +1,34 @@
+FROM gradle:8.3-jdk17 AS builder
+
+WORKDIR /app
+
+# 종속성 캐싱 단계: Gradle 설정 파일만 복사 후 빌드 실행
+COPY --chown=gradle:gradle build.gradle settings.gradle /app/
+RUN gradle build --no-daemon || true
+
+# 소스 파일을 컨테이너에 복사
+COPY --chown=gradle:gradle . /app
+
+# 프로덕션용 JAR 파일 빌드
+RUN gradle clean bootjar -x test
+
+FROM openjdk:17-jdk-slim
+
+# 보안을 위한 non-root 사용자 생성
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+WORKDIR /app
+
+# JAR 파일 복사
+COPY --from=builder /app/build/libs/*.jar app.jar
+
+# 소유권 변경
+RUN chown appuser:appuser app.jar
+
+# non-root 사용자로 전환
+USER appuser
+
+EXPOSE 8080
+
+# JVM 옵션 최적화
+ENTRYPOINT ["java", "-Xms512m", "-Xmx1024m", "-jar", "/app/app.jar"] 
