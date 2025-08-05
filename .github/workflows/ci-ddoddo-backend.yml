@@ -1,0 +1,166 @@
+name: CI for DDoddo Market Backend
+
+# 워크플로우가 실행될 조건 (Triggers)
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "apps/ddoddo-market/backend/**"
+
+# 실행될 작업(Job)들
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 소스 코드 체크아웃
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      # 2. JDK 17 설정
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      # 3. Gradle 캐싱
+      - name: Gradle Caching
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # 4. gradlew에 실행 권한 부여
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        working-directory: ./apps/ddoddo-market/backend
+
+      # 5. Gradle로 프로젝트 빌드
+      - name: Build with Gradle
+        run: ./gradlew build -x test
+        working-directory: ./apps/ddoddo-market/backend
+
+      # 6. Docker Hub에 로그인
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 7. Docker 이미지 빌드 및 푸시
+      - name: Build and push Docker image
+        id: build-push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/ddoddo-market/backend
+          file: ./apps/ddoddo-market/backend/Dockerfile.prod
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ddoddo-market-backend:${{ github.sha }}
+
+      # 8. 생성된 이미지 태그 출력
+      - name: Print image tag
+        run: echo "Image tagged with:${{ secrets.DOCKERHUB_USERNAME }}/ddoddo-market-backend:${{ github.sha }}"
+
+      # 9. Kubernetes 도구 설정
+      - name: Set up Kubernetes tools
+        uses: azure/setup-kubectl@v3
+        with:
+          version: "latest"
+
+      # 10. kubectl 설정
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+
+      # 11. GitHub Secrets를 사용하여 secrets.yaml 생성
+      - name: Create secrets file from GitHub Secrets
+        run: |
+          cat > secrets.yaml << EOF
+          secrets:
+            dbUrl: "jdbc:postgresql://ddoddo-service-database:5432/ddoddo_market_db"
+            dbPassword: "${{ secrets.DB_PASSWORD }}"
+            jwtSetUri: "https://ihndhftpruocuzzkxbtw.supabase.co"
+            jwtSecretKey: "${{ secrets.JWT_SECRET_KEY }}"
+            cloudflareAccessKeyId: "${{ secrets.CLOUDFLARE_ACCESS_KEY_ID }}"
+            cloudflareSecretAccessKey: "${{ secrets.CLOUDFLARE_SECRET_ACCESS_KEY }}"
+            cloudflareR2BucketName: "test"
+            cloudflareAccountId: "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+            cloudflareR2PublicUrl: "${{ secrets.CLOUDFLARE_R2_PUBLIC_URL }}"
+          EOF
+
+      # 12. Helm을 사용하여 Kubernetes에 배포
+      - name: Deploy to Kubernetes with Helm
+        run: |
+          cd apps/ddoddo-market/backend/helm/ddoddo-market-chart
+
+          # Helm 차트 설치 또는 업그레이드
+          if helm list -n default | grep -q "ddoddo-market"; then
+            helm upgrade ddoddo-market . -f ../../../../../secrets.yaml \
+              --set deployment.image.repository=${{ secrets.DOCKERHUB_USERNAME }}/ddoddo-market-backend \
+              --set deployment.image.tag=${{ github.sha }}
+          else
+            helm install ddoddo-market . -f ../../../../../secrets.yaml \
+              --set deployment.image.repository=${{ secrets.DOCKERHUB_USERNAME }}/ddoddo-market-backend \
+              --set deployment.image.tag=${{ github.sha }}
+          fi
+
+      # 13. 배포 확인
+      - name: Verify deployment
+        run: |
+          kubectl get pods -l app.kubernetes.io/name=ddoddo-market-chart
+          kubectl get services -l app.kubernetes.io/name=ddoddo-market-chart
+
+      # 14. 매니페스트 저장소 체크아웃 (기존 ArgoCD 배포 방식 유지)
+      - name: Checkout manifests repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.ACTION_PAT }}
+          repository: ${{ github.repository_owner }}/k8s-labs-ddoddo-market
+          path: manifests
+
+      # 15. YAML 수정 도구(yq) 설치
+      - name: Install yq
+        run: |
+          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
+
+      # 16. Helm 배포 지시서의 이미지 태그 업데이트
+      - name: Update image tag in ArgoCD Application manifest
+        run: |
+          # 1) 태그 생성
+          NEW_TAG=${GITHUB_SHA:0:7}
+          echo "Updating image tag to: $NEW_TAG"
+
+          # 2) 매니페스트 존재 확인
+          if [ ! -f manifests/ddoddo-market-application.yaml ]; then
+            echo "Error: Manifest file not found"
+            exit 1
+          fi
+
+          # 3) image.tag 파라미터 업데이트 (직접 치환 방식)
+          yq e "(.spec.source.helm.parameters[] | select(.name == \"image.tag\") | .value) = \"$NEW_TAG\"" \
+            -i manifests/ddoddo-market-application.yaml
+
+          # 4) 결과 확인
+          echo "Updated manifest:"
+          yq e '.spec.source.helm.parameters[] | select(.name == "image.tag")' \
+            manifests/ddoddo-market-application.yaml
+
+      # 17. 변경 사항 커밋 및 푸시
+      - name: Commit and push changes
+        run: |
+          cd manifests
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "ci(backend): Update image tag to ${GITHUB_SHA:0:7}"
+            git push
+          fi

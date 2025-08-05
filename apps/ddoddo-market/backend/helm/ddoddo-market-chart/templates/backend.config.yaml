@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ddoddo-market-chart.fullname" . }}-config
+  labels:
+    {{- include "ddoddo-market-chart.labels" . | nindent 4 }}
+data:
+  SPRING_PROFILES_ACTIVE: {{ .Values.config.springProfilesActive | default "prod" }}
+  DB_USERNAME: {{ .Values.config.dbUsername | default "root" }}
+  DDL_AUTO: {{ .Values.config.ddlAuto | default "update" }}
+  SHOW_SQL: {{ .Values.config.showSql | default "false" | quote }}

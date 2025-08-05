@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ddoddo-market-chart.fullname" . }}-deployment
+  labels:
+    {{- include "ddoddo-market-chart.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.deployment.replicas | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "ddoddo-market-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ddoddo-market-chart.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.deployment.image.pullPolicy | default "IfNotPresent" }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort | default 8080 }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "ddoddo-market-chart.fullname" . }}-config
+            - secretRef:
+                name: {{ include "ddoddo-market-chart.fullname" . }}-secret
+          {{- if .Values.deployment.startupProbe }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.deployment.startupProbe.path | default "/actuator/health" }}
+              port: {{ .Values.service.targetPort | default 8080 }}
+            initialDelaySeconds: {{ .Values.deployment.startupProbe.initialDelaySeconds | default 20 }}
+            periodSeconds: {{ .Values.deployment.startupProbe.periodSeconds | default 10 }}
+            failureThreshold: {{ .Values.deployment.startupProbe.failureThreshold | default 12 }}
+          {{- end }}
+          {{- if .Values.deployment.livenessProbe }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.deployment.livenessProbe.path | default "/actuator/health/liveness" }}
+              port: {{ .Values.service.targetPort | default 8080 }}
+            initialDelaySeconds: {{ .Values.deployment.livenessProbe.initialDelaySeconds | default 30 }}
+            periodSeconds: {{ .Values.deployment.livenessProbe.periodSeconds | default 20 }}
+          {{- end }}
+          {{- if .Values.deployment.readinessProbe }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.deployment.readinessProbe.path | default "/actuator/health/readiness" }}
+              port: {{ .Values.service.targetPort | default 8080 }}
+            initialDelaySeconds: {{ .Values.deployment.readinessProbe.initialDelaySeconds | default 15 }}
+            periodSeconds: {{ .Values.deployment.readinessProbe.periodSeconds | default 10 }}
+          {{- end }}
+          {{- if .Values.deployment.resources }}
+          resources:
+            {{- toYaml .Values.deployment.resources | nindent 12 }}
+          {{- end }}
+

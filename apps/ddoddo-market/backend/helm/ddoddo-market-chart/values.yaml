@@ -1,0 +1,81 @@
+# Application Configuration
+app:
+  name: ddoddo-market
+  version: "1.0.0"
+
+# ConfigMap Configuration
+config:
+  springProfilesActive: "prod"
+  dbUsername: "root"
+  ddlAuto: "update"
+  showSql: "false"
+
+# Secrets Configuration
+# 실제 운영 환경에서는 이 값들을 외부에서 주입해야 합니다
+# 예: helm install --set secrets.dbPassword=your-password
+secrets:
+  # Database Configuration
+  dbUrl: "jdbc:postgresql://ddoddo-service-database:5432/ddoddo_market_db"
+  dbPassword: "pass1234"
+
+  # JWT Configuration
+  jwtSetUri: "https://ihndhftpruocuzzkxbtw.supabase.co"
+  jwtSecretKey: "your-jwt-secret-key"
+
+  # Cloudflare Configuration
+  cloudflareAccessKeyId: "your-access-key"
+  cloudflareSecretAccessKey: "your-secret-key"
+  cloudflareR2BucketName: "test"
+  cloudflareAccountId: "your-account-id"
+  cloudflareR2PublicUrl: "your-public-url"
+
+# Deployment Configuration
+deployment:
+  replicas: 1
+  image:
+    repository: namung08/ddoddo-backend
+    tag: v1.0
+    pullPolicy: IfNotPresent
+
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+  # Health Check Probes
+  startupProbe:
+    path: "/actuator/health"
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    failureThreshold: 12
+
+  livenessProbe:
+    path: "/actuator/health/liveness"
+    initialDelaySeconds: 30
+    periodSeconds: 20
+
+  readinessProbe:
+    path: "/actuator/health/readiness"
+    initialDelaySeconds: 15
+    periodSeconds: 10
+
+# Service Configuration
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+# Ingress Configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: ddoddo-market.local
+      paths:
+        - path: /api
+          pathType: Prefix
