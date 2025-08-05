@@ -93,12 +93,12 @@ jobs:
           fi
 
           # 3) image.tag 파라미터 업데이트 (직접 치환 방식)
-          yq e "(.spec.source.helm.parameters[] | select(.name == \"image.tag\") | .value) = \"$NEW_TAG\"" \
+          yq e "(.spec.source.helm.parameters[] | select(.name == \"backend.image.tag\") | .value) = \"$NEW_TAG\"" \
             -i manifests/todo-list-application.yaml
 
           # 4) 결과 확인
           echo "Updated manifest:"
-          yq e '.spec.source.helm.parameters[] | select(.name == "image.tag")' \
+          yq e '.spec.source.helm.parameters[] | select(.name == "backend.image.tag")' \
             manifests/todo-list-application.yaml
 
           
