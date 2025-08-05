@@ -9,3 +9,4 @@ data:
   DB_USERNAME: {{ .Values.config.dbUsername | default "root" }}
   DDL_AUTO: {{ .Values.config.ddlAuto | default "update" }}
   SHOW_SQL: {{ .Values.config.showSql | default "false" | quote }}
+
